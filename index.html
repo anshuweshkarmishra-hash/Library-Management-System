@@ -66,7 +66,7 @@
                     <i class="fa-solid fa-user-graduate text-2xl"></i>
                 </div>
                 <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Member Portal</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Can issue/return books and add members. No delete access.</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Can add/issue/return books and add members. No delete access.</p>
             </div>
         </div>
     </div>
@@ -193,11 +193,12 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions (Shows for both, but Add Book is hidden for members) -->
+                <!-- Quick Actions -->
                 <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 mb-8 transition-colors">
                     <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-5">Quick Actions</h3>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="quick-actions-grid">
                         
+                        <!-- Add Book is now accessible to everyone -->
                         <button id="qa-add-book" onclick="openModal('addBookModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-600 dark:hover:bg-indigo-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
                             <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-700 group-hover:bg-indigo-500 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:text-white"><i class="fa-solid fa-plus text-lg"></i></div>
                             <span class="text-sm font-bold">Add Book</span>
@@ -290,7 +291,7 @@
     </div>
 
     <!-- MODALS (Popups) -->
-    <!-- Add Book (Admin Only) -->
+    <!-- Add Book (Accessible to both now) -->
     <div id="addBookModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center transition-all">
         <form onsubmit="handleAddBook(event)" class="bg-white dark:bg-slate-800 p-8 rounded-2xl w-96 shadow-2xl border border-slate-200 dark:border-slate-700">
             <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-6">Add New Book</h2>
@@ -522,9 +523,7 @@
                 document.getElementById('profileImg').src = "https://ui-avatars.com/api/?name=Anshuweshkar+Mishra&background=6366f1&color=fff&bold=true";
                 
                 // Show Admin-only sections
-                document.getElementById('qa-add-book').style.display = 'flex';
                 document.getElementById('transactions-container').style.display = 'block';
-                document.getElementById('add-book-btn').style.display = 'block';
                 document.querySelectorAll('.action-col').forEach(el => el.style.display = 'table-cell');
             } else {
                 document.getElementById('profileName').innerText = "Library Member";
@@ -532,11 +531,13 @@
                 document.getElementById('profileImg').src = "https://ui-avatars.com/api/?name=Library+Member&background=10b981&color=fff&bold=true";
                 
                 // Hide Admin-only sections
-                document.getElementById('qa-add-book').style.display = 'none'; // Members can't add books
                 document.getElementById('transactions-container').style.display = 'none'; // Members can't see transactions
-                document.getElementById('add-book-btn').style.display = 'none'; // Table header button
                 document.querySelectorAll('.action-col').forEach(el => el.style.display = 'none'); // Hides delete column
             }
+            
+            // Add Book Button is now always visible for both Admin and Member
+            document.getElementById('qa-add-book').style.display = 'flex';
+            document.getElementById('add-book-btn').style.display = 'block';
 
             document.getElementById('stat-total-books').innerText = booksData.length;
             document.getElementById('stat-total-members').innerText = membersData.length;
@@ -651,21 +652,21 @@
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).querySelector('form').reset(); }
 
         // --- FORM SUBMISSIONS ---
+        // Admins & Members can perform below actions
         function handleAddBook(e) {
             e.preventDefault();
-            if(currentUserRole !== 'admin') { showToast("Only admins can add new books.", "error"); return; }
             const title = document.getElementById('bookTitle').value;
             const author = document.getElementById('bookAuthor').value;
             const newId = "BK-" + Math.floor(Math.random() * 900 + 100); 
             booksData.push({ id: newId, title, author, status: "Available", issuedTo: null });
             
-            transactionsData.unshift({ type: "New Book", msg: `Added '${title}' (by Admin)`, date: getToday() });
+            const addedBy = currentUserRole === 'admin' ? 'Admin' : 'Member';
+            transactionsData.unshift({ type: "New Book", msg: `Added '${title}' (by ${addedBy})`, date: getToday() });
             
             saveData(); // Save to local storage
             closeModal('addBookModal'); updateUI(); showToast("Book added to catalog!");
         }
 
-        // Admins & Members can perform below actions
         function handleAddMember(e) {
             e.preventDefault();
             const name = document.getElementById('memberName').value;
