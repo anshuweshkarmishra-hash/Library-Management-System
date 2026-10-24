@@ -356,7 +356,8 @@
             const id = document.getElementById('loginId').value;
             const pass = document.getElementById('loginPass').value;
 
-            if(id === "Anshuweshkar" && pass === "1111") {
+            // Credentials Checked Here
+            if(id === "Anshuweshkar" && pass === "2005") {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-layout').style.display = 'flex';
                 showToast("Welcome to Dashboard, Anshuweshkar!", "success");
@@ -369,6 +370,7 @@
         function handleLogout() {
             document.getElementById('login-screen').style.display = 'flex';
             document.getElementById('app-layout').style.display = 'none';
+            document.getElementById('loginId').value = '';
             document.getElementById('loginPass').value = '';
             showToast("Logged out successfully", "success");
         }
@@ -538,7 +540,7 @@
             e.preventDefault();
             const title = document.getElementById('bookTitle').value;
             const author = document.getElementById('bookAuthor').value;
-            const newId = "BK-" + Math.floor(Math.random() * 900 + 100); // Random ID for better feel
+            const newId = "BK-" + Math.floor(Math.random() * 900 + 100); 
             booksData.push({ id: newId, title, author, status: "Available", issuedTo: null });
             transactionsData.unshift({ type: "New Book", msg: `Added '${title}'`, date: getToday() });
             
@@ -592,7 +594,6 @@
             closeModal('returnBookModal'); updateUI(); showToast("Book Returned successfully!");
         }
 
-        // Initialize UI only (App is hidden until login)
         window.onload = () => {
             updateUI();
         };
