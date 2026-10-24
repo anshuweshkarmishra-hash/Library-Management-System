@@ -33,21 +33,57 @@
         /* View Management */
         .view-section { display: none; }
         .view-section.active { display: block; }
-        #app-layout { display: none; } /* Hidden until login */
+        
+        /* Hide screens initially */
+        #login-screen, #app-layout { display: none; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 h-screen overflow-hidden transition-colors duration-300">
 
+    <!-- ROLE SELECTION SCREEN -->
+    <div id="role-selection-screen" class="h-screen w-full flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-900 absolute z-50 transition-all">
+        <div class="mb-10 text-center">
+            <div class="w-20 h-20 bg-indigo-500 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-indigo-500/30 mx-auto mb-4">
+                <i class="fa-solid fa-book-open text-4xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-slate-800 dark:text-white tracking-wide">Smart<span class="text-indigo-500">Shelf</span></h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">Select your portal to continue</p>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-6 max-w-2xl w-full px-6">
+            <!-- Admin Card -->
+            <div onclick="showLogin()" class="flex-1 bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:-translate-y-2 hover:shadow-2xl transition-all group">
+                <div class="w-14 h-14 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-6 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-user-shield text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Admin Portal</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Full access. Manage books, members, deletions, and view transactions.</p>
+            </div>
+            
+            <!-- Member Card -->
+            <div onclick="loginAsMember()" class="flex-1 bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:-translate-y-2 hover:shadow-2xl transition-all group">
+                <div class="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-6 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-user-graduate text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Member Portal</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Can issue/return books and add members. No delete access.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- LOGIN SCREEN -->
     <div id="login-screen" class="h-screen w-full flex items-center justify-center bg-slate-100 dark:bg-slate-900 absolute z-50">
-        <form onsubmit="handleLogin(event)" class="bg-white dark:bg-slate-800 p-8 rounded-3xl w-96 shadow-2xl border border-slate-200 dark:border-slate-700">
-            <div class="flex justify-center mb-6">
+        <form onsubmit="handleLogin(event)" class="bg-white dark:bg-slate-800 p-8 rounded-3xl w-96 shadow-2xl border border-slate-200 dark:border-slate-700 relative">
+            <button type="button" onclick="showRoleSelection()" class="absolute top-6 left-6 text-slate-400 hover:text-indigo-500 transition-colors">
+                <i class="fa-solid fa-arrow-left text-xl"></i>
+            </button>
+            <div class="flex justify-center mb-6 mt-4">
                 <div class="w-16 h-16 bg-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-                    <i class="fa-solid fa-book-open text-3xl"></i>
+                    <i class="fa-solid fa-lock text-3xl"></i>
                 </div>
             </div>
-            <h2 class="text-2xl font-bold text-center text-slate-800 dark:text-white mb-2">Welcome Back</h2>
-            <p class="text-center text-slate-500 dark:text-slate-400 mb-8 text-sm">Please login to access SmartShelf</p>
+            <h2 class="text-2xl font-bold text-center text-slate-800 dark:text-white mb-2">Admin Login</h2>
+            <p class="text-center text-slate-500 dark:text-slate-400 mb-8 text-sm">Please enter credentials to continue</p>
             
             <div class="space-y-4">
                 <div>
@@ -97,11 +133,16 @@
                 </a>
             </nav>
             
-            <!-- Logout Button -->
-            <div class="p-4 border-t border-slate-800">
-                <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-xl transition-all">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    <span class="font-medium">Logout</span>
+            <!-- Sidebar Footer: Theme Toggle & Logout -->
+            <div class="p-4 border-t border-slate-800 flex flex-col gap-2">
+                <button onclick="toggleTheme()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800/40 hover:bg-slate-700 text-slate-300 rounded-xl transition-all border border-transparent hover:border-slate-600">
+                    <i id="themeIcon" class="fa-solid fa-moon w-5"></i>
+                    <span class="font-medium" id="themeText">Dark Mode</span>
+                </button>
+
+                <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800/80 hover:bg-red-500/20 text-slate-300 hover:text-red-400 rounded-xl transition-all border border-transparent hover:border-red-500/30">
+                    <i class="fa-solid fa-arrow-right-from-bracket w-5"></i>
+                    <span class="font-medium">Logout / Switch</span>
                 </button>
             </div>
         </aside>
@@ -114,18 +155,13 @@
                 <h2 id="pageTitle" class="text-2xl font-bold text-slate-800 dark:text-white">Dashboard Overview</h2>
                 
                 <div class="flex items-center gap-6">
-                    <!-- Theme Toggle -->
-                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                        <i id="themeIcon" class="fa-solid fa-moon"></i>
-                    </button>
-                    
                     <!-- Profile -->
-                    <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center gap-3 pl-4">
                         <div class="text-right hidden sm:block">
-                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Anshuweshkar Mishra</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Head Librarian</p>
+                            <p id="profileName" class="text-sm font-bold text-slate-700 dark:text-slate-200">Name</p>
+                            <p id="profileRole" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Role</p>
                         </div>
-                        <img src="https://ui-avatars.com/api/?name=Anshuweshkar+Mishra&background=6366f1&color=fff&bold=true" alt="Admin" class="w-10 h-10 rounded-full shadow-md border-2 border-white dark:border-slate-700">
+                        <img id="profileImg" src="" alt="User" class="w-10 h-10 rounded-full shadow-md border-2 border-white dark:border-slate-700">
                     </div>
                 </div>
             </header>
@@ -157,31 +193,35 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
+                <!-- Quick Actions (Shows for both, but Add Book is hidden for members) -->
                 <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 mb-8 transition-colors">
                     <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-5">Quick Actions</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <button onclick="openModal('addBookModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-600 dark:hover:bg-indigo-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="quick-actions-grid">
+                        
+                        <button id="qa-add-book" onclick="openModal('addBookModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-600 dark:hover:bg-indigo-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
                             <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-700 group-hover:bg-indigo-500 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:text-white"><i class="fa-solid fa-plus text-lg"></i></div>
                             <span class="text-sm font-bold">Add Book</span>
                         </button>
-                        <button onclick="openModal('addMemberModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-emerald-600 dark:hover:bg-emerald-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
+                        
+                        <button id="qa-add-member" onclick="openModal('addMemberModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-emerald-600 dark:hover:bg-emerald-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
                             <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-700 group-hover:bg-emerald-500 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:text-white"><i class="fa-solid fa-user-plus text-lg"></i></div>
                             <span class="text-sm font-bold">Add Member</span>
                         </button>
-                        <button onclick="openModal('issueBookModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
+                        
+                        <button id="qa-issue-book" onclick="openModal('issueBookModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
                             <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-700 group-hover:bg-blue-500 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:text-white"><i class="fa-solid fa-bookmark text-lg"></i></div>
                             <span class="text-sm font-bold">Issue Book</span>
                         </button>
-                        <button onclick="openModal('returnBookModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
+
+                        <button id="qa-return-book" onclick="openModal('returnBookModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
                             <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-700 group-hover:bg-slate-600 flex items-center justify-center text-slate-800 dark:text-white group-hover:text-white"><i class="fa-solid fa-rotate-left text-lg"></i></div>
                             <span class="text-sm font-bold">Return Book</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Recent Transactions Table -->
-                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
+                <!-- Recent Transactions Table (Only for Admin) -->
+                <div id="transactions-container" class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
                     <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800">
                         <h3 class="text-lg font-bold text-slate-800 dark:text-white">Recent Transactions</h3>
                     </div>
@@ -204,7 +244,7 @@
             <div id="books-view" class="view-section p-8 overflow-y-auto flex-1">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold text-slate-800 dark:text-white">Library Catalog</h3>
-                    <button onclick="openModal('addBookModal')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-indigo-700 transition">
+                    <button id="add-book-btn" onclick="openModal('addBookModal')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-indigo-700 transition">
                         + Add New Book
                     </button>
                 </div>
@@ -216,7 +256,7 @@
                                 <th class="px-6 py-4 font-bold">Title & Author</th>
                                 <th class="px-6 py-4 font-bold">Status</th>
                                 <th class="px-6 py-4 font-bold">Issued To</th>
-                                <th class="px-6 py-4 font-bold text-right">Actions</th>
+                                <th class="px-6 py-4 font-bold text-right action-col">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="booksTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
@@ -228,7 +268,7 @@
             <div id="members-view" class="view-section p-8 overflow-y-auto flex-1">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold text-slate-800 dark:text-white">Registered Members</h3>
-                    <button onclick="openModal('addMemberModal')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 transition">
+                    <button id="add-member-btn" onclick="openModal('addMemberModal')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 transition">
                         + Add Member
                     </button>
                 </div>
@@ -239,7 +279,7 @@
                                 <th class="px-6 py-4 font-bold">Member Info</th>
                                 <th class="px-6 py-4 font-bold">Course</th>
                                 <th class="px-6 py-4 font-bold">Books Holding</th>
-                                <th class="px-6 py-4 font-bold text-right">Actions</th>
+                                <th class="px-6 py-4 font-bold text-right action-col">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="membersTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
@@ -250,7 +290,7 @@
     </div>
 
     <!-- MODALS (Popups) -->
-    <!-- Add Book -->
+    <!-- Add Book (Admin Only) -->
     <div id="addBookModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center transition-all">
         <form onsubmit="handleAddBook(event)" class="bg-white dark:bg-slate-800 p-8 rounded-2xl w-96 shadow-2xl border border-slate-200 dark:border-slate-700">
             <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-6">Add New Book</h2>
@@ -335,6 +375,9 @@
 
     <script>
         // --- DATA STATE ---
+        let currentUserRole = null; // 'admin' or 'member'
+
+        // Default Data
         let booksData = [
             { id: "BK-101", title: "Java: The Complete Reference", author: "Herbert Schildt", status: "Available", issuedTo: null },
             { id: "BK-102", title: "Let Us C", author: "Yashavant Kanetkar", status: "Available", issuedTo: null },
@@ -350,29 +393,66 @@
 
         let transactionsData = [];
 
-        // --- AUTHENTICATION ---
+        // --- LOCAL STORAGE SYSTEM ---
+        function saveData() {
+            localStorage.setItem('libBooks', JSON.stringify(booksData));
+            localStorage.setItem('libMembers', JSON.stringify(membersData));
+            localStorage.setItem('libTrans', JSON.stringify(transactionsData));
+        }
+
+        function loadData() {
+            const savedBooks = localStorage.getItem('libBooks');
+            const savedMembers = localStorage.getItem('libMembers');
+            const savedTrans = localStorage.getItem('libTrans');
+            
+            if (savedBooks) booksData = JSON.parse(savedBooks);
+            if (savedMembers) membersData = JSON.parse(savedMembers);
+            if (savedTrans) transactionsData = JSON.parse(savedTrans);
+        }
+
+        // --- AUTHENTICATION & ROLE MANAGEMENT ---
+        function showRoleSelection() {
+            document.getElementById('role-selection-screen').style.display = 'flex';
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-layout').style.display = 'none';
+            document.getElementById('loginId').value = '';
+            document.getElementById('loginPass').value = '';
+            currentUserRole = null;
+        }
+
+        function showLogin() {
+            document.getElementById('role-selection-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+
+        function loginAsMember() {
+            currentUserRole = 'member';
+            document.getElementById('role-selection-screen').style.display = 'none';
+            document.getElementById('app-layout').style.display = 'flex';
+            showToast("Logged in as Member", "success");
+            switchView('dashboard');
+        }
+
         function handleLogin(e) {
             e.preventDefault();
             const id = document.getElementById('loginId').value;
             const pass = document.getElementById('loginPass').value;
 
-            // Credentials Checked Here
+            // Admin Credentials
             if(id === "Anshuweshkar" && pass === "2005") {
+                currentUserRole = 'admin';
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-layout').style.display = 'flex';
-                showToast("Welcome to Dashboard, Anshuweshkar!", "success");
-                updateUI();
+                showToast("Welcome to Admin Dashboard, Anshuweshkar!", "success");
+                switchView('dashboard');
             } else {
                 showToast("Invalid Admin ID or Password!", "error");
             }
         }
 
         function handleLogout() {
-            document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('app-layout').style.display = 'none';
-            document.getElementById('loginId').value = '';
-            document.getElementById('loginPass').value = '';
-            showToast("Logged out successfully", "success");
+            showRoleSelection();
+            showToast("Successfully logged out", "success");
         }
 
         // --- THEME TOGGLE (Dark/Light) ---
@@ -381,19 +461,22 @@
             isDarkMode = !isDarkMode;
             const html = document.documentElement;
             const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
             
             if(isDarkMode) {
                 html.classList.add('dark');
                 icon.classList.remove('fa-moon');
                 icon.classList.add('fa-sun');
+                text.innerText = "Light Mode";
             } else {
                 html.classList.remove('dark');
                 icon.classList.remove('fa-sun');
                 icon.classList.add('fa-moon');
+                text.innerText = "Dark Mode";
             }
         }
 
-        // --- UI NAVIGATION ---
+        // --- UI NAVIGATION & RENDER ---
         function switchView(viewName) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById(`${viewName}-view`).classList.add('active');
@@ -413,7 +496,6 @@
             updateUI(); 
         }
 
-        // --- TOAST SYSTEM (Replaces Alert) ---
         function showToast(msg, type = "success") {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -433,11 +515,34 @@
         }
 
         function updateUI() {
+            // Check Access and Adjust UI
+            if(currentUserRole === 'admin') {
+                document.getElementById('profileName').innerText = "Anshuweshkar Mishra";
+                document.getElementById('profileRole').innerText = "Admin Librarian";
+                document.getElementById('profileImg').src = "https://ui-avatars.com/api/?name=Anshuweshkar+Mishra&background=6366f1&color=fff&bold=true";
+                
+                // Show Admin-only sections
+                document.getElementById('qa-add-book').style.display = 'flex';
+                document.getElementById('transactions-container').style.display = 'block';
+                document.getElementById('add-book-btn').style.display = 'block';
+                document.querySelectorAll('.action-col').forEach(el => el.style.display = 'table-cell');
+            } else {
+                document.getElementById('profileName').innerText = "Library Member";
+                document.getElementById('profileRole').innerText = "Library Access";
+                document.getElementById('profileImg').src = "https://ui-avatars.com/api/?name=Library+Member&background=10b981&color=fff&bold=true";
+                
+                // Hide Admin-only sections
+                document.getElementById('qa-add-book').style.display = 'none'; // Members can't add books
+                document.getElementById('transactions-container').style.display = 'none'; // Members can't see transactions
+                document.getElementById('add-book-btn').style.display = 'none'; // Table header button
+                document.querySelectorAll('.action-col').forEach(el => el.style.display = 'none'); // Hides delete column
+            }
+
             document.getElementById('stat-total-books').innerText = booksData.length;
             document.getElementById('stat-total-members').innerText = membersData.length;
             document.getElementById('stat-books-issued').innerText = booksData.filter(b => b.status === 'Issued').length;
 
-            // Books Table with Delete Button
+            // Books Table Generation
             const bBody = document.getElementById('booksTableBody');
             bBody.innerHTML = booksData.map(b => `
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
@@ -449,15 +554,16 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 text-slate-500 dark:text-slate-400 text-sm font-medium">${b.issuedTo || '-'}</td>
-                    <td class="px-6 py-4 text-right">
+                    ${currentUserRole === 'admin' ? `
+                    <td class="px-6 py-4 text-right action-col">
                         <button onclick="deleteBook('${b.id}')" class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Delete Book">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
-                    </td>
+                    </td>` : ''}
                 </tr>
             `).join('');
 
-            // Members Table with Delete Button
+            // Members Table Generation
             const mBody = document.getElementById('membersTableBody');
             mBody.innerHTML = membersData.map(m => {
                 const avatar = m.name.replace(' ', '+');
@@ -469,17 +575,18 @@
                     </td>
                     <td class="px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-300">${m.course}</td>
                     <td class="px-6 py-4"><span class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-lg text-xs font-bold">${m.booksHolding} Books</span></td>
-                    <td class="px-6 py-4 text-right">
+                    ${currentUserRole === 'admin' ? `
+                    <td class="px-6 py-4 text-right action-col">
                         <button onclick="deleteMember('${m.id}')" class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Delete Member">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
-                    </td>
+                    </td>` : ''}
                 </tr>
             `}).join('');
 
-            // Transactions Table
+            // Transactions Table (Rendered but container is hidden if Member)
             const tBody = document.getElementById('transactionsBody');
-            tBody.innerHTML = transactionsData.slice(0, 5).map(t => `
+            tBody.innerHTML = transactionsData.slice(0, 10).map(t => `
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <td class="px-6 py-4">
                         <span class="px-3 py-1 rounded-full text-xs font-bold ${t.type === 'Issue' ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400' : t.type === 'Return' ? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300' : t.type === 'Delete' ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'}">${t.type}</span>
@@ -492,8 +599,9 @@
             updateDropdowns();
         }
 
-        // --- DELETE OPERATIONS ---
+        // --- DELETE OPERATIONS (Admin Only) ---
         function deleteBook(id) {
+            if(currentUserRole !== 'admin') { showToast("You do not have permission to delete books.", "error"); return; }
             const bookIndex = booksData.findIndex(b => b.id === id);
             if(booksData[bookIndex].status === "Issued") {
                 showToast("Cannot delete a book currently issued to a member!", "error");
@@ -501,12 +609,16 @@
             }
             const bName = booksData[bookIndex].title;
             booksData.splice(bookIndex, 1);
-            transactionsData.unshift({ type: "Delete", msg: `Deleted Book: ${bName}`, date: getToday() });
+            
+            transactionsData.unshift({ type: "Delete", msg: `Deleted Book: ${bName} (by Admin)`, date: getToday() });
+            
+            saveData(); // Save to local storage
             updateUI();
             showToast("Book deleted successfully!");
         }
 
         function deleteMember(id) {
+            if(currentUserRole !== 'admin') { showToast("You do not have permission to delete members.", "error"); return; }
             const memberIndex = membersData.findIndex(m => m.id === id);
             if(membersData[memberIndex].booksHolding > 0) {
                 showToast("Cannot delete member. They must return issued books first!", "error");
@@ -514,7 +626,10 @@
             }
             const mName = membersData[memberIndex].name;
             membersData.splice(memberIndex, 1);
-            transactionsData.unshift({ type: "Delete", msg: `Deleted Member: ${mName}`, date: getToday() });
+            
+            transactionsData.unshift({ type: "Delete", msg: `Deleted Member: ${mName} (by Admin)`, date: getToday() });
+            
+            saveData(); // Save to local storage
             updateUI();
             showToast("Member deleted successfully!");
         }
@@ -538,23 +653,31 @@
         // --- FORM SUBMISSIONS ---
         function handleAddBook(e) {
             e.preventDefault();
+            if(currentUserRole !== 'admin') { showToast("Only admins can add new books.", "error"); return; }
             const title = document.getElementById('bookTitle').value;
             const author = document.getElementById('bookAuthor').value;
             const newId = "BK-" + Math.floor(Math.random() * 900 + 100); 
             booksData.push({ id: newId, title, author, status: "Available", issuedTo: null });
-            transactionsData.unshift({ type: "New Book", msg: `Added '${title}'`, date: getToday() });
             
+            transactionsData.unshift({ type: "New Book", msg: `Added '${title}' (by Admin)`, date: getToday() });
+            
+            saveData(); // Save to local storage
             closeModal('addBookModal'); updateUI(); showToast("Book added to catalog!");
         }
 
+        // Admins & Members can perform below actions
         function handleAddMember(e) {
             e.preventDefault();
             const name = document.getElementById('memberName').value;
             const course = document.getElementById('memberCourse').value;
             const newId = "MEM-" + Math.floor(Math.random() * 900 + 100);
             membersData.push({ id: newId, name, course, booksHolding: 0 });
-            transactionsData.unshift({ type: "New Member", msg: `Registered ${name}`, date: getToday() });
             
+            // Checking who added the member
+            const addedBy = currentUserRole === 'admin' ? 'Admin' : 'Member';
+            transactionsData.unshift({ type: "New Member", msg: `Registered ${name} (by ${addedBy})`, date: getToday() });
+            
+            saveData(); // Save to local storage
             closeModal('addMemberModal'); updateUI(); showToast("Member registered successfully!");
         }
 
@@ -572,8 +695,10 @@
             book.issuedTo = member.name;
             member.booksHolding++;
 
-            transactionsData.unshift({ type: "Issue", msg: `'${book.title}' issued to ${member.name}`, date: getToday() });
+            const issuedBy = currentUserRole === 'admin' ? 'Admin' : 'Member';
+            transactionsData.unshift({ type: "Issue", msg: `'${book.title}' issued to ${member.name} (by ${issuedBy})`, date: getToday() });
             
+            saveData(); // Save to local storage
             closeModal('issueBookModal'); updateUI(); showToast("Book Issued successfully!");
         }
 
@@ -589,13 +714,17 @@
             book.issuedTo = null;
             if(member) member.booksHolding--;
 
-            transactionsData.unshift({ type: "Return", msg: `'${book.title}' was returned`, date: getToday() });
+            const returnedBy = currentUserRole === 'admin' ? 'Admin' : 'Member';
+            transactionsData.unshift({ type: "Return", msg: `'${book.title}' was returned (by ${returnedBy})`, date: getToday() });
 
+            saveData(); // Save to local storage
             closeModal('returnBookModal'); updateUI(); showToast("Book Returned successfully!");
         }
 
+        // --- APP INITIALIZATION ---
         window.onload = () => {
-            updateUI();
+            loadData(); // Load saved data first
+            showRoleSelection(); // Show portal selection on load
         };
     </script>
 </body>
