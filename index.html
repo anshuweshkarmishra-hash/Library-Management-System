@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartShelf - Library Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-animate { animation: slideInRight 0.3s ease-out forwards; }
+        
+        /* View Management */
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        #app-layout { display: none; } /* Hidden until login */
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 h-screen overflow-hidden transition-colors duration-300">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="h-screen w-full flex items-center justify-center bg-slate-100 dark:bg-slate-900 absolute z-50">
+        <form onsubmit="handleLogin(event)" class="bg-white dark:bg-slate-800 p-8 rounded-3xl w-96 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <div class="flex justify-center mb-6">
+                <div class="w-16 h-16 bg-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-book-open text-3xl"></i>
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold text-center text-slate-800 dark:text-white mb-2">Welcome Back</h2>
+            <p class="text-center text-slate-500 dark:text-slate-400 mb-8 text-sm">Please login to access SmartShelf</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1">Admin ID</label>
+                    <input type="text" id="loginId" required placeholder="Enter ID" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1">Password</label>
+                    <input type="password" id="loginPass" required placeholder="Enter Password" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all">
+                </div>
+            </div>
+            <button type="submit" class="w-full mt-8 px-5 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/30">
+                Login to Dashboard
+            </button>
+        </form>
+    </div>
+
+    <!-- MAIN APP LAYOUT -->
+    <div id="app-layout" class="flex h-screen w-full">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 flex flex-col shadow-2xl z-20 flex-shrink-0 border-r border-slate-800">
+            <div class="h-20 flex items-center px-6 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                        <i class="fa-solid fa-book-open text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white tracking-wide">Smart<span class="text-indigo-400">Shelf</span></h1>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto" id="sidebarMenu">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4 px-2">Main Menu</p>
+                
+                <a href="#" onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item flex items-center gap-3 bg-indigo-500/10 text-indigo-400 px-4 py-3 rounded-xl transition-all border border-indigo-500/20">
+                    <i class="fa-solid fa-table-columns w-5 text-center"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                
+                <a href="#" onclick="switchView('books')" id="nav-books" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-all group">
+                    <i class="fa-solid fa-book w-5 text-center group-hover:text-indigo-400 transition-colors"></i>
+                    <span class="font-medium">Books Management</span>
+                </a>
+                
+                <a href="#" onclick="switchView('members')" id="nav-members" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-all group">
+                    <i class="fa-solid fa-users w-5 text-center group-hover:text-indigo-400 transition-colors"></i>
+                    <span class="font-medium">Members</span>
+                </a>
+            </nav>
+            
+            <!-- Logout Button -->
+            <div class="p-4 border-t border-slate-800">
+                <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-xl transition-all">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span class="font-medium">Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+            
+            <!-- Header -->
+            <header class="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 flex justify-between items-center z-10 sticky top-0 transition-colors">
+                <h2 id="pageTitle" class="text-2xl font-bold text-slate-800 dark:text-white">Dashboard Overview</h2>
+                
+                <div class="flex items-center gap-6">
+                    <!-- Theme Toggle -->
+                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        <i id="themeIcon" class="fa-solid fa-moon"></i>
+                    </button>
+                    
+                    <!-- Profile -->
+                    <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Anshuweshkar Mishra</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Head Librarian</p>
+                        </div>
+                        <img src="https://ui-avatars.com/api/?name=Anshuweshkar+Mishra&background=6366f1&color=fff&bold=true" alt="Admin" class="w-10 h-10 rounded-full shadow-md border-2 border-white dark:border-slate-700">
+                    </div>
+                </div>
+            </header>
+
+            <!-- VIEW: DASHBOARD -->
+            <div id="dashboard-view" class="view-section active p-8 overflow-y-auto flex-1">
+                <!-- Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex justify-between items-start transition-colors">
+                        <div>
+                            <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">Total Books</p>
+                            <h3 id="stat-total-books" class="text-3xl font-bold text-slate-800 dark:text-white">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xl"><i class="fa-solid fa-book"></i></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex justify-between items-start transition-colors">
+                        <div>
+                            <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">Total Members</p>
+                            <h3 id="stat-total-members" class="text-3xl font-bold text-slate-800 dark:text-white">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xl"><i class="fa-solid fa-users"></i></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex justify-between items-start transition-colors">
+                        <div>
+                            <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">Books Issued</p>
+                            <h3 id="stat-books-issued" class="text-3xl font-bold text-blue-600 dark:text-blue-400">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-handshake"></i></div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 mb-8 transition-colors">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-5">Quick Actions</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button onclick="openModal('addBookModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-600 dark:hover:bg-indigo-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
+                            <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-700 group-hover:bg-indigo-500 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:text-white"><i class="fa-solid fa-plus text-lg"></i></div>
+                            <span class="text-sm font-bold">Add Book</span>
+                        </button>
+                        <button onclick="openModal('addMemberModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-emerald-600 dark:hover:bg-emerald-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
+                            <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-700 group-hover:bg-emerald-500 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:text-white"><i class="fa-solid fa-user-plus text-lg"></i></div>
+                            <span class="text-sm font-bold">Add Member</span>
+                        </button>
+                        <button onclick="openModal('issueBookModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
+                            <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-700 group-hover:bg-blue-500 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:text-white"><i class="fa-solid fa-bookmark text-lg"></i></div>
+                            <span class="text-sm font-bold">Issue Book</span>
+                        </button>
+                        <button onclick="openModal('returnBookModal')" class="flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl p-4 transition-all border border-transparent dark:border-slate-700 group">
+                            <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-700 group-hover:bg-slate-600 flex items-center justify-center text-slate-800 dark:text-white group-hover:text-white"><i class="fa-solid fa-rotate-left text-lg"></i></div>
+                            <span class="text-sm font-bold">Return Book</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions Table -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
+                    <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">Recent Transactions</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
+                                    <th class="px-6 py-4 font-bold">Type</th>
+                                    <th class="px-6 py-4 font-bold">Details</th>
+                                    <th class="px-6 py-4 font-bold">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: BOOKS MANAGEMENT -->
+            <div id="books-view" class="view-section p-8 overflow-y-auto flex-1">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white">Library Catalog</h3>
+                    <button onclick="openModal('addBookModal')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-indigo-700 transition">
+                        + Add New Book
+                    </button>
+                </div>
+                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
+                                <th class="px-6 py-4 font-bold">Book ID</th>
+                                <th class="px-6 py-4 font-bold">Title & Author</th>
+                                <th class="px-6 py-4 font-bold">Status</th>
+                                <th class="px-6 py-4 font-bold">Issued To</th>
+                                <th class="px-6 py-4 font-bold text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="booksTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW: MEMBERS MANAGEMENT -->
+            <div id="members-view" class="view-section p-8 overflow-y-auto flex-1">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white">Registered Members</h3>
+                    <button onclick="openModal('addMemberModal')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 transition">
+                        + Add Member
+                    </button>
+                </div>
+                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
+                                <th class="px-6 py-4 font-bold">Member Info</th>
+                                <th class="px-6 py-4 font-bold">Course</th>
+                                <th class="px-6 py-4 font-bold">Books Holding</th>
+                                <th class="px-6 py-4 font-bold text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="membersTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS (Popups) -->
+    <!-- Add Book -->
+    <div id="addBookModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center transition-all">
+        <form onsubmit="handleAddBook(event)" class="bg-white dark:bg-slate-800 p-8 rounded-2xl w-96 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-6">Add New Book</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1">Book Title</label>
+                    <input type="text" id="bookTitle" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 outline-none dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1">Author Name</label>
+                    <input type="text" id="bookAuthor" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 outline-none dark:text-white">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-8">
+                <button type="button" onclick="closeModal('addBookModal')" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Add Member -->
+    <div id="addMemberModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center transition-all">
+        <form onsubmit="handleAddMember(event)" class="bg-white dark:bg-slate-800 p-8 rounded-2xl w-96 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-6">Register Member</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1">Full Name</label>
+                    <input type="text" id="memberName" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 outline-none dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1">Course (e.g. BCA)</label>
+                    <input type="text" id="memberCourse" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 outline-none dark:text-white">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-8">
+                <button type="button" onclick="closeModal('addMemberModal')" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700">Register</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Issue Book -->
+    <div id="issueBookModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center transition-all">
+        <form onsubmit="handleIssueBook(event)" class="bg-white dark:bg-slate-800 p-8 rounded-2xl w-96 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-6">Issue Book</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1">Select Member</label>
+                    <select id="issueMember" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 outline-none dark:text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1">Select Book</label>
+                    <select id="issueBook" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 outline-none dark:text-white"></select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-8">
+                <button type="button" onclick="closeModal('issueBookModal')" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700">Issue</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Return Book -->
+    <div id="returnBookModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center transition-all">
+        <form onsubmit="handleReturnBook(event)" class="bg-white dark:bg-slate-800 p-8 rounded-2xl w-96 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-6">Return Book</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1">Select Issued Book</label>
+                    <select id="returnBook" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 outline-none dark:text-white"></select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-8">
+                <button type="button" onclick="closeModal('returnBookModal')" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 bg-slate-800 dark:bg-slate-600 text-white font-bold rounded-xl hover:bg-slate-900 dark:hover:bg-slate-500">Return</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+        // --- DATA STATE ---
+        let booksData = [
+            { id: "BK-101", title: "Java: The Complete Reference", author: "Herbert Schildt", status: "Available", issuedTo: null },
+            { id: "BK-102", title: "Let Us C", author: "Yashavant Kanetkar", status: "Available", issuedTo: null },
+            { id: "BK-103", title: "Machine Learning Concepts", author: "Andrew Ng", status: "Available", issuedTo: null }
+        ];
+
+        let membersData = [
+            { id: "MEM-001", name: "Aryan Gupta", course: "BCA", booksHolding: 0 },
+            { id: "MEM-002", name: "Vidyut Singh", course: "BCA", booksHolding: 0 },
+            { id: "MEM-003", name: "Mayank Bhardwaj", course: "BCA", booksHolding: 0 },
+            { id: "MEM-004", name: "Rehan", course: "BCA", booksHolding: 0 }
+        ];
+
+        let transactionsData = [];
+
+        // --- AUTHENTICATION ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const id = document.getElementById('loginId').value;
+            const pass = document.getElementById('loginPass').value;
+
+            if(id === "Anshuweshkar" && pass === "1111") {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-layout').style.display = 'flex';
+                showToast("Welcome to Dashboard, Anshuweshkar!", "success");
+                updateUI();
+            } else {
+                showToast("Invalid Admin ID or Password!", "error");
+            }
+        }
+
+        function handleLogout() {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('app-layout').style.display = 'none';
+            document.getElementById('loginPass').value = '';
+            showToast("Logged out successfully", "success");
+        }
+
+        // --- THEME TOGGLE (Dark/Light) ---
+        let isDarkMode = false;
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            
+            if(isDarkMode) {
+                html.classList.add('dark');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                html.classList.remove('dark');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        // --- UI NAVIGATION ---
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(`${viewName}-view`).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.className = "nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-all group";
+                el.querySelector('i').classList.replace('text-indigo-400', 'text-slate-400');
+            });
+
+            const activeNav = document.getElementById(`nav-${viewName}`);
+            activeNav.className = "nav-item flex items-center gap-3 bg-indigo-500/10 text-indigo-400 px-4 py-3 rounded-xl transition-all border border-indigo-500/20";
+            activeNav.querySelector('i').classList.remove('text-slate-400');
+
+            const titles = { 'dashboard': 'Dashboard Overview', 'books': 'Books Management', 'members': 'Members Directory' };
+            document.getElementById('pageTitle').innerText = titles[viewName];
+
+            updateUI(); 
+        }
+
+        // --- TOAST SYSTEM (Replaces Alert) ---
+        function showToast(msg, type = "success") {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const icon = type === 'success' ? '<i class="fa-solid fa-check-circle text-emerald-500 text-xl"></i>' : '<i class="fa-solid fa-circle-exclamation text-red-500 text-xl"></i>';
+            const bg = type === 'success' ? 'border-emerald-200 dark:border-emerald-800' : 'border-red-200 dark:border-red-800';
+            
+            toast.className = `bg-white dark:bg-slate-800 px-6 py-4 rounded-xl shadow-lg border ${bg} flex items-center gap-3 toast-animate z-50`;
+            toast.innerHTML = `${icon}<span class="font-bold text-sm text-slate-700 dark:text-slate-200">${msg}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        // --- CORE FUNCTIONS ---
+        function getToday() {
+            return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function updateUI() {
+            document.getElementById('stat-total-books').innerText = booksData.length;
+            document.getElementById('stat-total-members').innerText = membersData.length;
+            document.getElementById('stat-books-issued').innerText = booksData.filter(b => b.status === 'Issued').length;
+
+            // Books Table with Delete Button
+            const bBody = document.getElementById('booksTableBody');
+            bBody.innerHTML = booksData.map(b => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td class="px-6 py-4 font-mono text-slate-500 dark:text-slate-400 text-xs">${b.id}</td>
+                    <td class="px-6 py-4"><p class="font-bold dark:text-white">${b.title}</p><p class="text-xs text-slate-500">${b.author}</p></td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${b.status === 'Available' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'}">
+                            ${b.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-slate-500 dark:text-slate-400 text-sm font-medium">${b.issuedTo || '-'}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="deleteBook('${b.id}')" class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Delete Book">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Members Table with Delete Button
+            const mBody = document.getElementById('membersTableBody');
+            mBody.innerHTML = membersData.map(m => {
+                const avatar = m.name.replace(' ', '+');
+                return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td class="px-6 py-4 flex items-center gap-3">
+                        <img src="https://ui-avatars.com/api/?name=${avatar}&background=random" class="w-9 h-9 rounded-full">
+                        <div><p class="font-bold dark:text-white">${m.name}</p><p class="text-xs text-slate-500 dark:text-slate-400 font-mono">${m.id}</p></div>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-300">${m.course}</td>
+                    <td class="px-6 py-4"><span class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-lg text-xs font-bold">${m.booksHolding} Books</span></td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="deleteMember('${m.id}')" class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Delete Member">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            `}).join('');
+
+            // Transactions Table
+            const tBody = document.getElementById('transactionsBody');
+            tBody.innerHTML = transactionsData.slice(0, 5).map(t => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${t.type === 'Issue' ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400' : t.type === 'Return' ? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300' : t.type === 'Delete' ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'}">${t.type}</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium text-slate-700 dark:text-slate-300">${t.msg}</td>
+                    <td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">${t.date}</td>
+                </tr>
+            `).join('');
+
+            updateDropdowns();
+        }
+
+        // --- DELETE OPERATIONS ---
+        function deleteBook(id) {
+            const bookIndex = booksData.findIndex(b => b.id === id);
+            if(booksData[bookIndex].status === "Issued") {
+                showToast("Cannot delete a book currently issued to a member!", "error");
+                return;
+            }
+            const bName = booksData[bookIndex].title;
+            booksData.splice(bookIndex, 1);
+            transactionsData.unshift({ type: "Delete", msg: `Deleted Book: ${bName}`, date: getToday() });
+            updateUI();
+            showToast("Book deleted successfully!");
+        }
+
+        function deleteMember(id) {
+            const memberIndex = membersData.findIndex(m => m.id === id);
+            if(membersData[memberIndex].booksHolding > 0) {
+                showToast("Cannot delete member. They must return issued books first!", "error");
+                return;
+            }
+            const mName = membersData[memberIndex].name;
+            membersData.splice(memberIndex, 1);
+            transactionsData.unshift({ type: "Delete", msg: `Deleted Member: ${mName}`, date: getToday() });
+            updateUI();
+            showToast("Member deleted successfully!");
+        }
+
+        function updateDropdowns() {
+            const memSelect = document.getElementById('issueMember');
+            memSelect.innerHTML = '<option value="" disabled selected>-- Select Member --</option>' + membersData.map(m => `<option value="${m.id}">${m.name} (${m.id})</option>`).join('');
+
+            const availBooks = booksData.filter(b => b.status === 'Available');
+            const ibSelect = document.getElementById('issueBook');
+            ibSelect.innerHTML = availBooks.length ? '<option value="" disabled selected>-- Select Book --</option>' + availBooks.map(b => `<option value="${b.id}">${b.title}</option>`).join('') : '<option value="" disabled selected>No books available</option>';
+
+            const issuedBooks = booksData.filter(b => b.status === 'Issued');
+            const rbSelect = document.getElementById('returnBook');
+            rbSelect.innerHTML = issuedBooks.length ? '<option value="" disabled selected>-- Select Book to Return --</option>' + issuedBooks.map(b => `<option value="${b.id}">${b.title} (Issued to: ${b.issuedTo})</option>`).join('') : '<option value="" disabled selected>No books currently issued</option>';
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).querySelector('form').reset(); }
+
+        // --- FORM SUBMISSIONS ---
+        function handleAddBook(e) {
+            e.preventDefault();
+            const title = document.getElementById('bookTitle').value;
+            const author = document.getElementById('bookAuthor').value;
+            const newId = "BK-" + Math.floor(Math.random() * 900 + 100); // Random ID for better feel
+            booksData.push({ id: newId, title, author, status: "Available", issuedTo: null });
+            transactionsData.unshift({ type: "New Book", msg: `Added '${title}'`, date: getToday() });
+            
+            closeModal('addBookModal'); updateUI(); showToast("Book added to catalog!");
+        }
+
+        function handleAddMember(e) {
+            e.preventDefault();
+            const name = document.getElementById('memberName').value;
+            const course = document.getElementById('memberCourse').value;
+            const newId = "MEM-" + Math.floor(Math.random() * 900 + 100);
+            membersData.push({ id: newId, name, course, booksHolding: 0 });
+            transactionsData.unshift({ type: "New Member", msg: `Registered ${name}`, date: getToday() });
+            
+            closeModal('addMemberModal'); updateUI(); showToast("Member registered successfully!");
+        }
+
+        function handleIssueBook(e) {
+            e.preventDefault();
+            const bookId = document.getElementById('issueBook').value;
+            const memberId = document.getElementById('issueMember').value;
+            
+            if(!bookId || !memberId) return showToast("Please select both Member and Book", "error");
+
+            const book = booksData.find(b => b.id === bookId);
+            const member = membersData.find(m => m.id === memberId);
+
+            book.status = "Issued";
+            book.issuedTo = member.name;
+            member.booksHolding++;
+
+            transactionsData.unshift({ type: "Issue", msg: `'${book.title}' issued to ${member.name}`, date: getToday() });
+            
+            closeModal('issueBookModal'); updateUI(); showToast("Book Issued successfully!");
+        }
+
+        function handleReturnBook(e) {
+            e.preventDefault();
+            const bookId = document.getElementById('returnBook').value;
+            if(!bookId) return showToast("Please select a valid book to return", "error");
+
+            const book = booksData.find(b => b.id === bookId);
+            const member = membersData.find(m => m.name === book.issuedTo);
+
+            book.status = "Available";
+            book.issuedTo = null;
+            if(member) member.booksHolding--;
+
+            transactionsData.unshift({ type: "Return", msg: `'${book.title}' was returned`, date: getToday() });
+
+            closeModal('returnBookModal'); updateUI(); showToast("Book Returned successfully!");
+        }
+
+        // Initialize UI only (App is hidden until login)
+        window.onload = () => {
+            updateUI();
+        };
+    </script>
+</body>
+</html>
